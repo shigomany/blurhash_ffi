@@ -1,0 +1,12 @@
+[package]
+name = "blurhash-ffi"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "blurhash_ffi"
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+blurhash = "0.2.3"
+wasm-bindgen = "0.2.100"

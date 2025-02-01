@@ -459,8 +459,14 @@ class _DecodeRequest with Freeable {
   final int channels;
   Pointer<Utf8>? _bhptr;
 
-  _DecodeRequest(this.id, this.blurHash, this.width, this.height, this.punch,
-      this.channels);
+  _DecodeRequest(
+    this.id,
+    this.blurHash,
+    this.width,
+    this.height,
+    this.punch,
+    this.channels,
+  );
 
   Pointer<Char> get blurHashPointer {
     if (_bhptr == null) {

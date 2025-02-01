@@ -1,0 +1,89 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  TARGET_LIB_NAME: blurhash_ffi
+  EXTENSION_LIB: '{{if eq OS "windows"}}dll{{else if eq OS "darwin"}}dylib{{else}}so{{end}}'
+
+tasks:
+  generate:bindings:
+    desc: Generate the bindings for the native Rust code
+    dir: rust
+    cmds:
+      - cbindgen --config cbindgen.toml --crate blurhash-ffi --output bindings/{{.TARGET_LIB_NAME}}.h
+  
+  generate:ffi:
+    desc: Generate the FFI bindings for the native Rust code
+    cmds:
+      - flutter pub run ffigen --config ffigen.yaml
+
+  generate:all:
+    desc: Generate all the bindings
+    cmds:
+      - task: generate:bindings
+      - task: generate:ffi
+
+  build:wasm:
+    desc: Build the WASM code in debug mode
+    dir: rust
+    cmds:
+      - wasm-pack build --target web
+
+  copy-binary:
+    desc: Coping the binary file to destination folder
+    dir: rust
+    internal: true
+    vars:
+      FROM_FOLDER: '{{default "pkg" .FROM_FOLDER}}'
+      TO_FOLDER: '{{default "bin" .TO_FOLDER}}'
+      FILE: '{{default "blurhash_ffi_bg.wasm" .FILE}}'
+      # Constant variables
+      FILE_NAME: '{{trimSuffix (printf ".%s" .FILE_EXTENSION) .FILE}}'
+      FILE_EXTENSION: '{{last (splitList "." .FILE)}}'
+      CMD_COPY: '{{if eq OS "windows"}}copy{{else}}cp{{end}}'
+      CMD_RENAME: '{{if eq OS "windows"}}ren{{else}}mv{{end}}'
+    cmds:
+      - cmd: '{{.CMD_COPY}} {{.FROM_FOLDER}}/{{.FILE}} {{.TO_FOLDER}}/{{.FILE}} &&
+              {{.CMD_RENAME}} {{.TO_FOLDER}}/{{.FILE}} {{.TO_FOLDER}}/{{.TARGET_LIB_NAME}}.{{.FILE_EXTENSION}}'
+
+  build:wasm-release:
+    desc: Build the WASM code in release mode
+    dir: rust
+    cmds:
+      - wasm-pack build --release --target web
+      - task: copy-binary
+        vars:
+          FROM_FOLDER: pkg
+          TO_FOLDER: bin
+          FILE: blurhash_ffi_bg.wasm
+  
+  build:native:
+    desc: Build the native Rust code in debug mode
+    dir: rust
+    cmds:
+      - cargo build
+
+  build:native-release:
+    desc: Build the native Rust code in release mode
+    dir: rust
+    cmds:
+      - cargo build --release
+      - task: copy-binary
+        vars:
+          FROM_FOLDER: target/release
+          TO_FOLDER: bin
+          FILE: libblurhash_ffi.{{.EXTENSION_LIB}}
+
+  build:bindings:
+    desc: Build the C bindings for the native Rust code
+    dir: rust
+    cmds:
+      - cbindgen --config cbindgen.toml --crate blurhash-ffi --output bin/{{.TARGET_LIB_NAME}}.h
+
+  build:all:
+    desc: Build all the code
+    cmds:
+      - task: build:wasm-release
+      - task: build:native-release
+      - task: build:bindings
