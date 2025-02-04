@@ -4,13 +4,26 @@ import 'package:flutter/painting.dart';
 
 class BlurhashFfiImage extends ImageProvider<BlurhashFfiImage> {
   /// Creates an object that decodes a [blurHash] as an image.
-  ///
-  /// The arguments must not be null.
-  const BlurhashFfiImage(this.blurHash,
-      {this.decodingWidth = 32, this.decodingHeight = 32, this.scale = 1.0});
+  const BlurhashFfiImage(
+    this.blurHash, {
+    this.decodingWidth = 32,
+    this.decodingHeight = 32,
+    this.scale = 1.0,
+  }) : inputImage = null;
+
+  /// Creates an object that encodes the given [inputImage] as a blurHash.
+  const BlurhashFfiImage.fromImageProvider(
+    this.inputImage, {
+    this.decodingWidth = 32,
+    this.decodingHeight = 32,
+    this.scale = 1.0,
+  }) : blurHash = null;
+
+  /// The image to encode into a blurHash.
+  final ImageProvider? inputImage;
 
   /// The bytes to decode into an image.
-  final String blurHash;
+  final String? blurHash;
 
   /// The scale to place in the [ImageInfo] object of the image.
   final double scale;
@@ -32,8 +45,14 @@ class BlurhashFfiImage extends ImageProvider<BlurhashFfiImage> {
   Future<ImageInfo> _loadAsync(BlurhashFfiImage key) async {
     assert(key == this);
 
-    final image = await BlurhashFFI.decode(blurHash,
-        width: decodingWidth, height: decodingHeight);
+    final blurHash = this.blurHash ?? await BlurhashFFI.encode(inputImage!);
+
+    final image = await BlurhashFFI.decode(
+      blurHash,
+      width: decodingWidth,
+      height: decodingHeight,
+    );
+
     return ImageInfo(image: image, scale: key.scale);
   }
 
@@ -45,8 +64,9 @@ class BlurhashFfiImage extends ImageProvider<BlurhashFfiImage> {
           other.scale == scale;
 
   @override
-  int get hashCode => Object.hash(blurHash.hashCode, scale);
+  int get hashCode => Object.hash(blurHash, inputImage, scale);
 
   @override
-  String toString() => '$runtimeType($blurHash, scale: $scale)';
+  String toString() =>
+      '$runtimeType(inputImage: $inputImage, blurhash: $blurHash, scale: $scale)';
 }

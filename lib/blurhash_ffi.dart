@@ -1,7 +1,6 @@
-library blurhash_ffi;
+library;
 
 export './blurhash.dart';
-export './uiImage.dart';
-export 'blurhashffi_image.dart';
+export 'src/proxy_image.dart';
+export 'src/blurhash_ffi_image.dart';
 export 'blurhashffi_widget.dart';
-export 'blurhash_the_image.dart';

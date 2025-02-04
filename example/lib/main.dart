@@ -90,14 +90,17 @@ class _MyAppState extends State<MyApp> {
                                     debugPrint('Blurhash displayed'),
                                 errorBuilder: (context, error, stackTrace) =>
                                     Container(
-                                        color: Colors.red,
-                                        child: const Center(
-                                            child: Text('Error',
-                                                style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 20,
-                                                    fontWeight:
-                                                        FontWeight.bold)))),
+                                  color: Colors.red,
+                                  child: const Center(
+                                    child: Text(
+                                      'Error',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
                               );
                             }
                             return const Center(

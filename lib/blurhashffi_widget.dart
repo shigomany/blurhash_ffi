@@ -1,6 +1,6 @@
 // ignore: constant_identifier_names
 import 'package:blurhash_ffi/blurhash.dart';
-import 'package:blurhash_ffi/uiImage.dart';
+import 'package:blurhash_ffi/src/proxy_image.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 
@@ -173,7 +173,7 @@ class BlurhashBackground extends StatelessWidget {
           }
           if (snap.hasData) {
             return Image(
-              image: UiImage(snap.data!),
+              image: ProxyImage(snap.data!),
               fit: fit,
               errorBuilder: errorBuilder,
             );
