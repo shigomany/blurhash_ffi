@@ -4,6 +4,10 @@ version: '3'
 
 vars:
   TARGET_LIB_NAME: blurhash_ffi
+  FRAMEWORK_NAME: blurhash_ffi
+  IOS_SIM_TARGET_ARHS: ['x86_64-apple-ios', 'aarch64-apple-ios-sim']
+  IOS_TARGET_ARHS: ['aarch64-apple-ios', 'aarch64-apple-ios-macabi']
+  MACOS_TARGET_ARHS: ['aarch64-apple-darwin', 'x86_64-apple-darwin']
   EXTENSION_LIB: '{{if eq OS "windows"}}dll{{else if eq OS "darwin"}}dylib{{else}}so{{end}}'
 
 tasks:
@@ -11,7 +15,7 @@ tasks:
     desc: Generate the bindings for the native Rust code
     dir: rust
     cmds:
-      - cbindgen --config cbindgen.toml --crate blurhash-ffi --output bindings/{{.TARGET_LIB_NAME}}.h
+      - cbindgen --config cbindgen.toml --crate blurhash-ffi --output ../ios/Classes/{{.TARGET_LIB_NAME}}.h
   
   generate:ffi:
     desc: Generate the FFI bindings for the native Rust code
@@ -19,7 +23,7 @@ tasks:
       - flutter pub run ffigen --config ffigen.yaml
 
   generate:all:
-    desc: Generate all the bindings
+    desc: Generate all files
     cmds:
       - task: generate:bindings
       - task: generate:ffi
@@ -30,60 +34,184 @@ tasks:
     cmds:
       - wasm-pack build --target web
 
-  copy-binary:
-    desc: Coping the binary file to destination folder
+  build:clean:
+    desc: Clean build folders
     dir: rust
-    internal: true
-    vars:
-      FROM_FOLDER: '{{default "pkg" .FROM_FOLDER}}'
-      TO_FOLDER: '{{default "bin" .TO_FOLDER}}'
-      FILE: '{{default "blurhash_ffi_bg.wasm" .FILE}}'
-      # Constant variables
-      FILE_NAME: '{{trimSuffix (printf ".%s" .FILE_EXTENSION) .FILE}}'
-      FILE_EXTENSION: '{{last (splitList "." .FILE)}}'
-      CMD_COPY: '{{if eq OS "windows"}}copy{{else}}cp{{end}}'
-      CMD_RENAME: '{{if eq OS "windows"}}ren{{else}}mv{{end}}'
     cmds:
-      - cmd: '{{.CMD_COPY}} {{.FROM_FOLDER}}/{{.FILE}} {{.TO_FOLDER}}/{{.FILE}} &&
-              {{.CMD_RENAME}} {{.TO_FOLDER}}/{{.FILE}} {{.TO_FOLDER}}/{{.TARGET_LIB_NAME}}.{{.FILE_EXTENSION}}'
+      - cargo clean
+  # copy-file:
+  #   desc: Coping the file to destination folder
+  #   internal: true
+  #   vars:
+  #     FROM_FOLDER: '{{default "pkg" .FROM_FOLDER}}'
+  #     TO_FOLDER: '{{default "bin" .TO_FOLDER}}'
+  #     FILE: '{{default "blurhash_ffi_bg.wasm" .FILE}}'
+  #     # Constant variables
+  #     FILE_NAME: '{{trimSuffix (printf ".%s" .FILE_EXTENSION) .FILE}}'
+  #     FILE_EXTENSION: '{{last (splitList "." .FILE)}}'
+  #     CMD_COPY: '{{if eq OS "windows"}}copy{{else}}cp{{end}}'
+  #     CMD_RENAME: '{{if eq OS "windows"}}ren{{else}}mv{{end}}'
+  #   cmds:
+  #     - cmd: '{{.CMD_COPY}} {{.FROM_FOLDER}}/{{.FILE}} {{.TO_FOLDER}}/{{.FILE}} &&
+  #             {{.CMD_RENAME}} {{.TO_FOLDER}}/{{.FILE}} {{.TO_FOLDER}}/{{.TARGET_LIB_NAME}}.{{.FILE_EXTENSION}}'
+  
+  copy-folder:
+    desc: Coping the folder to destination folder
+    internal: true
+    preconditions:
+      - sh: '{{if env "FROM_FOLDER" }} exit 1 {{end}}'
+        msg: 'Variable `FROM_FOLDER` is required'
+      - sh: '{{if env "TO_FOLDER" }} exit 1 {{end}}'
+        msg: 'Variable `TO_FOLDER` is required'
+      - sh: '{{if env "DELETE_FOLDER" }} exit 1 {{end}}'
+        msg: 'Variable `DELETE_FOLDER` is required'
+    vars:
+      # Constant variables
+      CMD_COPY: '{{if eq OS "windows"}}xcopy{{else}}cp -R{{end}}'
+      CMD_REMOVE: '{{if eq OS "windows"}}rmdir /s /q{{else}}rm -rf{{end}}'
+    cmds:
+      - cmd: '{{ if .DELETE_FOLDER }}{{$.CMD_REMOVE}} {{$.TO_FOLDER}} {{else}} echo "Coping without deletion" {{end}}'
+      - cmd: '{{.CMD_COPY}} {{.FROM_FOLDER}} {{.TO_FOLDER}} {{if eq OS "windows"}}/E /I /Y{{end}}'
 
   build:wasm-release:
     desc: Build the WASM code in release mode
     dir: rust
     cmds:
       - wasm-pack build --release --target web
-      - task: copy-binary
+      - task: copy-file
         vars:
           FROM_FOLDER: pkg
           TO_FOLDER: bin
           FILE: blurhash_ffi_bg.wasm
-  
-  build:native:
-    desc: Build the native Rust code in debug mode
-    dir: rust
-    cmds:
-      - cargo build
 
-  build:native-release:
-    desc: Build the native Rust code in release mode
+  build:ios:
+    desc: Build for iOS targets.
     dir: rust
+    platforms: [darwin]
+    vars:
+      IOS_ARCHS: '{{ concat .IOS_TARGET_ARHS .IOS_SIM_TARGET_ARHS }}'
     cmds:
-      - cargo build --release
-      - task: copy-binary
-        vars:
-          FROM_FOLDER: target/release
-          TO_FOLDER: bin
-          FILE: libblurhash_ffi.{{.EXTENSION_LIB}}
+      - cargo lipo --release
+      - cp target/universal/release/lib{{.TARGET_LIB_NAME}}.a ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-ios.a                                                                                                                 
+      # - for: { var: IOS_ARCHS, as: ARCH }
+      #   cmd: cargo build --lib --release --target {{.ARCH | replace "[" "" | replace "]" ""}}
+      # - for: { var: IOS_ARCHS, as: ARCH }
+      #   cmd: rm -rf ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}.a
+      # # - for: { var: IOS_ARCHS, as: ARCH }
+      # #   cmd: mkdir -p bin/{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}
+      # - for: { var: IOS_TARGET_ARHS, as: ARCH }
+      #   cmd: cp target/{{.ARCH}}/release/lib{{.TARGET_LIB_NAME}}.a ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}.a
+      # # - cp target/aarch64-apple-ios/release/lib{{.TARGET_LIB_NAME}}.a bin/ios/lib{{.TARGET_LIB_NAME}}.a
+      # - 'lipo -create -output ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-sim.a {{range $arch := .IOS_SIM_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
+      # - lipo -info ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-ios.a 
+        # platforms: [darwin]
+      # - cmd: rm -rf bin/lib{{.TARGET_LIB_NAME}}-ios.a
+      #   platforms: [darwin]
+      # - cmd: rm -rf bin/lib{{.TARGET_LIB_NAME}}-ios-sim.a
+      #   platforms: [darwin]
+      # - cmd: cp target/aarch64-apple-ios/release/lib{{.TARGET_LIB_NAME}}.a bin/lib{{.TARGET_LIB_NAME}}-ios.a
+      #   platforms: [darwin]
+      # - cmd: 'lipo -create -output bin/lib{{.TARGET_LIB_NAME}}-ios-sim.a {{range $index, $arch := .IOS_SIM_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
+      #   platforms: [darwin]
+      # - cmd: lipo -info bin/lib{{.TARGET_LIB_NAME}}-ios.a
+      #   platforms: [darwin]
+      # - cmd: lipo -info bin/lib{{.TARGET_LIB_NAME}}-ios-sim.a
+      #   platforms: [darwin]
 
-  build:bindings:
-    desc: Build the C bindings for the native Rust code
+  build:macos:
+    desc: Build for macOs targets.
     dir: rust
+    platforms: [darwin]
     cmds:
-      - cbindgen --config cbindgen.toml --crate blurhash-ffi --output bin/{{.TARGET_LIB_NAME}}.h
+      - for: { var: MACOS_TARGET_ARHS, as: ARCH }
+        cmd: cargo build --lib --release --target {{.ARCH}}
+      - rm -rf ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-macos.a
+      - 'lipo -create -output ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-macos.a {{range $arch := .MACOS_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
+      - lipo -info ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-macos.a
+      #   platforms: [darwin]
+      # - cmd: lipo -info bin/lib{{.TARGET_LIB_NAME}}-macos.a
+      #   platforms: [darwin]
 
-  build:all:
-    desc: Build all the code
+  # build:xcframework:
+  #   desc: Build the XCFramework for iOS and macOS
+  #   platforms: [darwin]
+  #   dir: rust
+  #   cmds:
+  #     - rm -rf bin/{{.FRAMEWORK_NAME}}.xcframework
+  #     - xcodebuild 
+  #       -create-xcframework 
+  #       -library bin/macos/lib{{$.TARGET_LIB_NAME}}.a 
+  #       -headers include/ 
+  #       -library bin/ios/lib{{$.TARGET_LIB_NAME}}.a 
+  #       -headers include/ 
+  #       -library bin/sim/lib{{$.TARGET_LIB_NAME}}.a 
+  #       -headers include/ 
+  #       -library bin/macabi/lib{{$.TARGET_LIB_NAME}}.a 
+  #       -headers include/ 
+  #       -output bin/{{.FRAMEWORK_NAME}}.xcframework
+
+  bootstrap:
+    desc: Build for all.
+    aliases: [bs]
     cmds:
-      - task: build:wasm-release
-      - task: build:native-release
-      - task: build:bindings
+      # Darwin targets
+      - task: precheck:all
+      - task: generate:bindings
+      - task: generate:ffi
+      - task: build:ios
+      - task: build:macos
+      # - task: copy-folder
+      #   vars:
+      #     FROM_FOLDER: rust/bin/{{.FRAMEWORK_NAME}}.xcframework
+      #     TO_FOLDER: ios/Frameworks/{{.FRAMEWORK_NAME}}.xcframework
+      #     DELETE_FOLDER: true
+    
+        
+      # - for: { var: MACOS_TARGET_ARHS, as: ARCH }
+      #   cmd: cargo build --release --lib --target {{.ARCH}}
+      #   platforms: [darwin]
+      # - task: copy-file
+      #   vars:
+      #     FROM_FOLDER: target/release/aarch64-apple-ios
+      #     TO_FOLDER: bin/aarch64-apple-ios
+      #     FILE: libblurhash_ffi.a
+
+  # build:native-release:
+  #   desc: Build the native Rust code in release mode
+  #   dir: rust
+  #   cmds:
+  #     - cargo build --release
+  #     - task: copy-file
+  #       vars:
+  #         FROM_FOLDER: target/release
+  #         TO_FOLDER: bin
+  #         FILE: libblurhash_ffi.{{.EXTENSION_LIB}}
+
+  # build:all:
+  #   desc: Build all the code
+  #   cmds:
+  #     - task: build:wasm-release
+  #     - task: build:native
+  #     - task: build:bindings
+
+  precheck:rust-targets:
+    desc: Downloading Rust comaptible targets.
+    dir: rust
+    vars:
+      DARWIN_TARGETS: '{{ concat .IOS_TARGET_ARHS .IOS_SIM_TARGET_ARHS .MACOS_TARGET_ARHS }}'
+    cmds:
+      - for: { var: DARWIN_TARGETS, as: TARGET }
+        cmd: rustup target add {{.TARGET | replace "[" "" | replace "]" ""}}
+        platforms: [darwin]
+      - cargo install cargo-lipo
+
+  precheck:dependencies:
+    desc: Installing required dependencies.
+    cmds:
+      - cargo install cargo-lipo
+
+  precheck:all:
+    desc: All precheck required dependencies.
+    cmds:
+      - task: precheck:rust-targets
+      - task: precheck:dependencies

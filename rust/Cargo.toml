@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 name = "blurhash_ffi"
-crate-type = ["staticlib", "cdylib"]
+crate-type = ["staticlib"]
 
 [dependencies]
 blurhash = "0.2.3"

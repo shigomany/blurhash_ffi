@@ -8,6 +8,11 @@ Matches the official [Blurhash](https://github.com/woltapp/blurhash) implementat
 ![blurhash_ffi](https://firebasestorage.googleapis.com/v0/b/folksable-d4dc8.appspot.com/o/blurhash_ffi.png?alt=media&token=e6c7e81b-1798-403b-b055-68a1f767d21f)
 
 
+# Installation
+
+Select Target Runner -> Build Settings -> Strip Style -> change from "All
+Symbols" to "Non-Global Symbols"
+
 ## Usage
 To use this plugin, add `blurhash_ffi` as a dependency in your pubspec.yaml file
 

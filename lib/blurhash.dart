@@ -24,11 +24,11 @@ const String _libName = 'blurhash_ffi';
 /// Create a neat class to handle all the glue code and expose a nice API.
 class BlurhashFFI {
   // singleton class
-  static const BlurhashFFI _instance = BlurhashFFI._();
+  static final BlurhashFFI _instance = BlurhashFFI._();
 
   factory BlurhashFFI() => _instance;
 
-  const BlurhashFFI._();
+  BlurhashFFI._();
 
   static bool isValidBlurHash(String blurHash) =>
       _instance._isValidBlurHash(blurHash);
@@ -63,9 +63,9 @@ class BlurhashFFI {
   }
 
   /// The dynamic library in which the symbols for [BlurhashFfiBindings] can be found.
-  DynamicLibrary get _dylib {
+  DynamicLibrary _openDylib() {
     if (Platform.isMacOS || Platform.isIOS) {
-      return DynamicLibrary.open('$_libName.framework/$_libName');
+      return DynamicLibrary.process();
     }
     if (Platform.isAndroid || Platform.isLinux) {
       return DynamicLibrary.open('lib$_libName.so');
@@ -76,7 +76,11 @@ class BlurhashFFI {
     throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
   }
 
-  BlurhashFfiBindings get _bindings => BlurhashFfiBindings(_dylib);
+  late final DynamicLibrary _openedLibrary = _openDylib();
+
+  BlurhashFfiBindings get _bindings {
+    return BlurhashFfiBindings(_openedLibrary);
+  }
 
   // // encode requests
   // int _nextEncodeRequestId = 0;
@@ -193,7 +197,7 @@ class BlurhashFFI {
   ) async {
     return compute<String, Uint8List>(
       (blurhash) => _bindings
-          .decode(
+          .blurhash_decode(
             blurhash.toNativeUtf8().cast(),
             blurhash.length,
             width,
@@ -207,32 +211,52 @@ class BlurhashFFI {
   }
 
   Future<String> _encodeBlurHash(ImageBundle bundle) async {
-    return compute<ImageBundle, String>(
-      (blurhash) {
-        final arena = Arena();
-        final pointer = arena<Uint8>(blurhash.rgbBytes.length);
-        for (int i = 0; i < blurhash.rgbBytes.length; i++) {
-          pointer[i] = blurhash.rgbBytes[i];
-        }
+    final blurhash = bundle;
+    final arena = Arena();
+    final pointer = arena<Uint8>(blurhash.rgbBytes.length);
+    for (int i = 0; i < blurhash.rgbBytes.length; i++) {
+      pointer[i] = blurhash.rgbBytes[i];
+    }
+    final rawValue = _bindings
+        .blurhash_encode(
+          blurhash.componentX,
+          blurhash.componentY,
+          blurhash.width,
+          blurhash.height,
+          pointer,
+          blurhash.rgbBytes.length,
+        )
+        .cast<Utf8>()
+        .toDartString();
+    arena.free(pointer);
 
-        final rawValue = _bindings
-            .encode(
-              blurhash.componentX,
-              blurhash.componentY,
-              blurhash.width,
-              blurhash.height,
-              pointer,
-              blurhash.rgbBytes.length,
-            )
-            .cast<Utf8>()
-            .toDartString();
-        arena.free(pointer);
+    return rawValue;
+    // return compute<ImageBundle, String>(
+    //   (blurhash) {
+    //     final arena = Arena();
+    //     final pointer = arena<Uint8>(blurhash.rgbBytes.length);
+    //     for (int i = 0; i < blurhash.rgbBytes.length; i++) {
+    //       pointer[i] = blurhash.rgbBytes[i];
+    //     }
 
-        return rawValue;
-      },
-      bundle,
-      debugLabel: 'blurhash_ffi#native',
-    );
+    //     final rawValue = _bindings
+    //         .encode(
+    //           blurhash.componentX,
+    //           blurhash.componentY,
+    //           blurhash.width,
+    //           blurhash.height,
+    //           pointer,
+    //           blurhash.rgbBytes.length,
+    //         )
+    //         .cast<Utf8>()
+    //         .toDartString();
+    //     arena.free(pointer);
+
+    //     return rawValue;
+    //   },
+    //   bundle,
+    //   debugLabel: 'blurhash_ffi#native',
+    // );
   }
 
   // Future<int> _decodeToArray(

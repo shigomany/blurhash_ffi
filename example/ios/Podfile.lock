@@ -1,5 +1,5 @@
 PODS:
-  - blurhash_ffi (0.0.1):
+  - blurhash_ffi (0.0.3):
     - Flutter
   - Flutter (1.0.0)
 
@@ -14,7 +14,7 @@ EXTERNAL SOURCES:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  blurhash_ffi: 4831b96320d4273876c9a2fd3f7d50b8a3a53509
+  blurhash_ffi: ed42f27b73d6f0e7bbf7c7bc7e0b15ae0d782199
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
 
 PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796

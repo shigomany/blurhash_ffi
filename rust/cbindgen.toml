@@ -1,1 +1,6 @@
 language = "C"
+# no_includes = true
+
+[defines]
+"target_os = ios" = "TARGET_OS_IOS"
+"target_os = macos" = "TARGET_OS_MACOS"

@@ -1,10 +1,10 @@
 use blurhash::{decode as internal_decode, encode as internal_encode};
-use std::ffi::{c_char, CString};
-use wasm_bindgen::prelude::*;
+use std::ffi::*;
+// use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+// #[wasm_bindgen]
 #[no_mangle]
-pub extern "C" fn encode(
+pub extern "C" fn blurhash_encode(
     components_x: u32,
     components_y: u32,
     width: u32,
@@ -18,9 +18,9 @@ pub extern "C" fn encode(
     c_string.into_raw()
 }
 
-#[wasm_bindgen]
+// #[wasm_bindgen]
 #[no_mangle]
-pub extern "C" fn decode(
+pub extern "C" fn blurhash_decode(
     blurhash: *const u8,
     blurhash_len: usize,
     width: u32,

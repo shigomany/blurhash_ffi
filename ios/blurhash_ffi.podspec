@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'blurhash_ffi'
-  s.version          = '0.0.1'
+  s.version          = '0.0.3'
   s.summary          = 'A new Flutter FFI plugin project.'
   s.description      = <<-DESC
 A new Flutter FFI plugin project.
@@ -19,10 +19,26 @@ A new Flutter FFI plugin project.
   # `../src/*` so that the C sources can be shared among all target platforms.
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
+  s.public_header_files = 'Classes**/*.h'
+  s.resource_bundles = {'blurhash_ffi_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
   s.dependency 'Flutter'
   s.platform = :ios, '11.0'
 
+  s.ios.deployment_target = '12.0'
+
   # Flutter.framework does not contain a i386 slice.
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
+  s.pod_target_xcconfig = { 
+    'DEFINES_MODULE' => 'YES', 
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
+    'ENABLE_BITCODE' => 'NO',
+    'OTHER_LDFLAGS' => '-force_load $(PODS_TARGET_SRCROOT)/Libraries/libblurhash_ffi-ios.a -lstdc++',
+  }
+  # s.xcconfig = { 
+  #   'OTHER_LDFLAGS' => '-framework blurhash_ffi',
+  # }
   s.swift_version = '5.0'
+  s.static_framework = true
+  # s.preserve_paths = 'Frameworks/blurhash_ffi.xcframework'
+  s.vendored_libraries = 'Libraries/*-ios.a'
+  # s.vendored_frameworks = 'Frameworks/blurhash_ffi.xcframework'
 end
