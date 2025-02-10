@@ -29,9 +29,8 @@ A new Flutter FFI plugin project.
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 
     'DEFINES_MODULE' => 'YES', 
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
     'ENABLE_BITCODE' => 'NO',
-    'OTHER_LDFLAGS' => '-force_load $(PODS_TARGET_SRCROOT)/Libraries/libblurhash_ffi-ios.a -lstdc++',
   }
   # s.xcconfig = { 
   #   'OTHER_LDFLAGS' => '-framework blurhash_ffi',
@@ -39,6 +38,6 @@ A new Flutter FFI plugin project.
   s.swift_version = '5.0'
   s.static_framework = true
   # s.preserve_paths = 'Frameworks/blurhash_ffi.xcframework'
-  s.vendored_libraries = 'Libraries/*-ios.a'
+  s.ios.vendored_libraries = 'Libraries/ios/*.a'
   # s.vendored_frameworks = 'Frameworks/blurhash_ffi.xcframework'
 end

@@ -3,11 +3,14 @@
 version: '3'
 
 vars:
+  # Constants
   TARGET_LIB_NAME: blurhash_ffi
   FRAMEWORK_NAME: blurhash_ffi
+  # Archs
   IOS_SIM_TARGET_ARHS: ['x86_64-apple-ios', 'aarch64-apple-ios-sim']
-  IOS_TARGET_ARHS: ['aarch64-apple-ios', 'aarch64-apple-ios-macabi']
+  IOS_TARGET_ARHS: ['aarch64-apple-ios']
   MACOS_TARGET_ARHS: ['aarch64-apple-darwin', 'x86_64-apple-darwin']
+  # Utils
   EXTENSION_LIB: '{{if eq OS "windows"}}dll{{else if eq OS "darwin"}}dylib{{else}}so{{end}}'
 
 tasks:
@@ -27,12 +30,6 @@ tasks:
     cmds:
       - task: generate:bindings
       - task: generate:ffi
-
-  build:wasm:
-    desc: Build the WASM code in debug mode
-    dir: rust
-    cmds:
-      - wasm-pack build --target web
 
   build:clean:
     desc: Clean build folders
@@ -73,7 +70,7 @@ tasks:
       - cmd: '{{ if .DELETE_FOLDER }}{{$.CMD_REMOVE}} {{$.TO_FOLDER}} {{else}} echo "Coping without deletion" {{end}}'
       - cmd: '{{.CMD_COPY}} {{.FROM_FOLDER}} {{.TO_FOLDER}} {{if eq OS "windows"}}/E /I /Y{{end}}'
 
-  build:wasm-release:
+  build:wasm:
     desc: Build the WASM code in release mode
     dir: rust
     cmds:
@@ -81,8 +78,8 @@ tasks:
       - task: copy-file
         vars:
           FROM_FOLDER: pkg
-          TO_FOLDER: bin
-          FILE: blurhash_ffi_bg.wasm
+          TO_FOLDER: ../web/assets
+          FILE: '{{.TARGET_LIB_NAME}}_bg.wasm'
 
   build:ios:
     desc: Build for iOS targets.
@@ -90,33 +87,16 @@ tasks:
     platforms: [darwin]
     vars:
       IOS_ARCHS: '{{ concat .IOS_TARGET_ARHS .IOS_SIM_TARGET_ARHS }}'
-    cmds:
-      - cargo lipo --release
-      - cp target/universal/release/lib{{.TARGET_LIB_NAME}}.a ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-ios.a                                                                                                                 
-      # - for: { var: IOS_ARCHS, as: ARCH }
-      #   cmd: cargo build --lib --release --target {{.ARCH | replace "[" "" | replace "]" ""}}
-      # - for: { var: IOS_ARCHS, as: ARCH }
-      #   cmd: rm -rf ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}.a
-      # # - for: { var: IOS_ARCHS, as: ARCH }
-      # #   cmd: mkdir -p bin/{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}
-      # - for: { var: IOS_TARGET_ARHS, as: ARCH }
-      #   cmd: cp target/{{.ARCH}}/release/lib{{.TARGET_LIB_NAME}}.a ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}.a
-      # # - cp target/aarch64-apple-ios/release/lib{{.TARGET_LIB_NAME}}.a bin/ios/lib{{.TARGET_LIB_NAME}}.a
-      # - 'lipo -create -output ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-sim.a {{range $arch := .IOS_SIM_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
-      # - lipo -info ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-ios.a 
-        # platforms: [darwin]
-      # - cmd: rm -rf bin/lib{{.TARGET_LIB_NAME}}-ios.a
-      #   platforms: [darwin]
-      # - cmd: rm -rf bin/lib{{.TARGET_LIB_NAME}}-ios-sim.a
-      #   platforms: [darwin]
-      # - cmd: cp target/aarch64-apple-ios/release/lib{{.TARGET_LIB_NAME}}.a bin/lib{{.TARGET_LIB_NAME}}-ios.a
-      #   platforms: [darwin]
-      # - cmd: 'lipo -create -output bin/lib{{.TARGET_LIB_NAME}}-ios-sim.a {{range $index, $arch := .IOS_SIM_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
-      #   platforms: [darwin]
-      # - cmd: lipo -info bin/lib{{.TARGET_LIB_NAME}}-ios.a
-      #   platforms: [darwin]
-      # - cmd: lipo -info bin/lib{{.TARGET_LIB_NAME}}-ios-sim.a
-      #   platforms: [darwin]
+    cmds:                                                                                                             
+      - for: { var: IOS_ARCHS, as: ARCH }
+        cmd: cargo build --lib --release --target {{.ARCH | replace "[" "" | replace "]" ""}}
+      - for: { var: IOS_ARCHS, as: ARCH }
+        cmd: rm -rf ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}.a
+      - mkdir -p ../ios/Libraries/ios
+      - for: { var: IOS_TARGET_ARHS, as: ARCH }
+        cmd: cp target/{{.ARCH}}/release/lib{{.TARGET_LIB_NAME}}.a ../ios/Libraries/ios/lib{{.TARGET_LIB_NAME}}-{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}.a
+      - 'lipo -create -output ../ios/Libraries/ios/lib{{.TARGET_LIB_NAME}}-sim.a {{range $arch := .IOS_SIM_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
+      - lipo -info ../ios/Libraries/ios/lib{{.TARGET_LIB_NAME}}-ios.a 
 
   build:macos:
     desc: Build for macOs targets.
@@ -125,30 +105,10 @@ tasks:
     cmds:
       - for: { var: MACOS_TARGET_ARHS, as: ARCH }
         cmd: cargo build --lib --release --target {{.ARCH}}
-      - rm -rf ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-macos.a
-      - 'lipo -create -output ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-macos.a {{range $arch := .MACOS_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
-      - lipo -info ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-macos.a
-      #   platforms: [darwin]
-      # - cmd: lipo -info bin/lib{{.TARGET_LIB_NAME}}-macos.a
-      #   platforms: [darwin]
-
-  # build:xcframework:
-  #   desc: Build the XCFramework for iOS and macOS
-  #   platforms: [darwin]
-  #   dir: rust
-  #   cmds:
-  #     - rm -rf bin/{{.FRAMEWORK_NAME}}.xcframework
-  #     - xcodebuild 
-  #       -create-xcframework 
-  #       -library bin/macos/lib{{$.TARGET_LIB_NAME}}.a 
-  #       -headers include/ 
-  #       -library bin/ios/lib{{$.TARGET_LIB_NAME}}.a 
-  #       -headers include/ 
-  #       -library bin/sim/lib{{$.TARGET_LIB_NAME}}.a 
-  #       -headers include/ 
-  #       -library bin/macabi/lib{{$.TARGET_LIB_NAME}}.a 
-  #       -headers include/ 
-  #       -output bin/{{.FRAMEWORK_NAME}}.xcframework
+      - mkdir -p ../ios/Libraries/macos
+      - rm -rf ../ios/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a
+      - 'lipo -create -output ../ios/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a {{range $arch := .MACOS_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
+      - lipo -info ../ios/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a
 
   bootstrap:
     desc: Build for all.
@@ -176,24 +136,6 @@ tasks:
       #     TO_FOLDER: bin/aarch64-apple-ios
       #     FILE: libblurhash_ffi.a
 
-  # build:native-release:
-  #   desc: Build the native Rust code in release mode
-  #   dir: rust
-  #   cmds:
-  #     - cargo build --release
-  #     - task: copy-file
-  #       vars:
-  #         FROM_FOLDER: target/release
-  #         TO_FOLDER: bin
-  #         FILE: libblurhash_ffi.{{.EXTENSION_LIB}}
-
-  # build:all:
-  #   desc: Build all the code
-  #   cmds:
-  #     - task: build:wasm-release
-  #     - task: build:native
-  #     - task: build:bindings
-
   precheck:rust-targets:
     desc: Downloading Rust comaptible targets.
     dir: rust
@@ -203,15 +145,8 @@ tasks:
       - for: { var: DARWIN_TARGETS, as: TARGET }
         cmd: rustup target add {{.TARGET | replace "[" "" | replace "]" ""}}
         platforms: [darwin]
-      - cargo install cargo-lipo
-
-  precheck:dependencies:
-    desc: Installing required dependencies.
-    cmds:
-      - cargo install cargo-lipo
 
   precheck:all:
     desc: All precheck required dependencies.
     cmds:
       - task: precheck:rust-targets
-      - task: precheck:dependencies

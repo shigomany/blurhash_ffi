@@ -4,5 +4,13 @@
   "editor.fontWeight": "normal",
   "files.associations": {
     "blurhash_ffi.h": "c"
-  }
+  },
+  "yaml.schemas": {
+    "https://taskfile.dev/schema.json": [
+      "**/Taskfile.yml",
+    ]
+  },
+  "task": {
+    "outputTo": "terminal"
+  },
 }

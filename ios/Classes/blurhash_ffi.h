@@ -16,6 +16,8 @@ uint8_t *blurhash_decode(const uint8_t *blurhash,
                          uint32_t height,
                          float punch);
 
+bool is_valid_blurhash(const uint8_t *blurhash, uintptr_t blurhash_len);
+
 void free_string(char *ptr);
 
 void free_decoded_data(uint8_t *ptr, uintptr_t len);

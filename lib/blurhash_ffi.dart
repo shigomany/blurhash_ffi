@@ -1,6 +1,9 @@
 library;
 
-export './blurhash.dart';
-export 'src/proxy_image.dart';
+// Utils
+export 'src/utils/ui_image_factory.dart';
+export 'src/exceptions.dart';
+
+// General
+export 'src/blurhash.dart';
 export 'src/blurhash_ffi_image.dart';
-export 'blurhashffi_widget.dart';

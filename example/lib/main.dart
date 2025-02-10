@@ -1,7 +1,14 @@
+import 'package:blurhash_ffi_example/variants/cached_network_image_variant.dart';
+import 'package:blurhash_ffi_example/variants/octo_image_variant.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
 
+import 'utils/url_images_list.dart';
+import 'variants/vanilla_image_variant.dart';
+import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as image;
 import 'package:blurhash_ffi/blurhash_ffi.dart';
+
+typedef ItemImageBlurhashType = ({String url, String blurhash});
 
 void main() {
   runApp(const MyApp());
@@ -15,129 +22,139 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  Future<String>? blurHashResult;
-  int selectedImage = -1;
+  final _items = <ItemImageBlurhashType>[];
+  late Future<void> _loadImages;
+  late ItemImageBlurhashType _selected;
 
   @override
   void initState() {
     super.initState();
+    _loadImages = _loadingAllImages().whenComplete(
+      () {
+        _selected = _items.first;
+      },
+    );
+  }
+
+  /// Load all images and generate blurhashes for them.
+  Future<void> _loadingAllImages() async {
+    for (final url in urlImagesList) {
+      final response = await http.get(Uri.parse(url));
+      final decodedImage = image.decodeImage(response.bodyBytes);
+      if (decodedImage == null) {
+        throw const FormatException('Error with decoding image');
+      }
+
+      final rgbaImage = decodedImage.convert(numChannels: 4);
+
+      final blurhash = BlurhashFFI.encode(
+        rgbaImage.buffer.asUint8List(),
+        width: decodedImage.width,
+        height: decodedImage.height,
+      );
+      _items.add((url: url, blurhash: blurhash));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Blurhash FFI Example'),
-        ),
-        body: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [1, 2, 3].map<Widget>((e) {
-                    var assetName = e == 1
-                        ? 'assets/images/$e.jpg'
-                        : 'assets/images/$e.png';
-                    return MaterialButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: () async {
-                        blurHashResult = BlurhashFFI.encode(
-                          AssetImage(assetName),
-                        );
-                        setState(() {
-                          selectedImage = e;
-                        });
-                      },
-                      child: ImageSelect(
-                        imageProvider: AssetImage(assetName),
-                        isSelected: selectedImage == e,
-                      ),
-                    );
-                  }).toList(),
+      home: DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Blurhash FFI Example'),
+            bottom: const TabBar(
+              tabs: <Widget>[
+                Tab(
+                  text: 'Vanilla',
                 ),
-                if (blurHashResult != null)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: FutureBuilder(
-                      future: blurHashResult,
-                      builder: (context, snapshot) => snapshot.hasData
-                          ? Text('blurhash: ${snapshot.data}')
-                          : const CircularProgressIndicator(),
-                    ),
-                  ),
-                if (blurHashResult != null)
-                  Align(
-                    alignment: Alignment.center,
-                    child: SizedBox(
-                      height: 120,
-                      width: 120,
-                      child: FutureBuilder(
-                          future: blurHashResult,
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData) {
-                              return BlurhashFfi(
-                                hash: snapshot.data!,
-                                decodingWidth: 120,
-                                decodingHeight: 120,
-                                imageFit: BoxFit.cover,
-                                color: Colors.grey,
-                                onReady: () => debugPrint('Blurhash ready'),
-                                onDisplayed: () =>
-                                    debugPrint('Blurhash displayed'),
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color: Colors.red,
-                                  child: const Center(
-                                    child: Text(
-                                      'Error',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          }),
-                    ),
-                  )
+                Tab(
+                  text: 'OctoImage',
+                ),
+                Tab(
+                  text: 'CachedNetworkImage',
+                ),
               ],
             ),
           ),
+          body: FutureBuilder<void>(
+              future: _loadImages,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Preloading blurhashes for images'),
+                        SizedBox(height: 8),
+                        CircularProgressIndicator.adaptive()
+                      ],
+                    ),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Error with loading images'),
+                        const SizedBox(height: 8),
+                        const Icon(
+                          Icons.error,
+                          color: Colors.red,
+                        ),
+                        OutlinedButton(
+                          onPressed: () {
+                            setState(() {
+                              _loadImages = _loadingAllImages();
+                            });
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return TabBarView(
+                  children: [
+                    Center(
+                      child: VanillaImageVariant(
+                        selected: _selected,
+                        items: _items,
+                        onChanged: _handleNewImage,
+                      ),
+                    ),
+                    Center(
+                      child: OctoImageVariant(
+                        selected: _selected,
+                        items: _items,
+                        onChanged: _handleNewImage,
+                      ),
+                    ),
+                    Center(
+                      child: CachedNetworkImageVariant(
+                        selected: _selected,
+                        items: _items,
+                        onChanged: _handleNewImage,
+                      ),
+                    ),
+                  ],
+                );
+              }),
         ),
       ),
     );
   }
-}
 
-class ImageSelect extends StatelessWidget {
-  final ImageProvider imageProvider;
-  final bool isSelected;
-  const ImageSelect(
-      {super.key, required this.imageProvider, this.isSelected = false});
+  void _handleNewImage() {
+    final index = _items.indexOf(_selected);
+    final nextIndex = (index + 1) % _items.length;
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        decoration: BoxDecoration(
-          border: isSelected ? Border.all(color: Colors.blue, width: 2) : null,
-        ),
-        child: Image(
-          image: imageProvider,
-          width: 100,
-          height: 100,
-        ),
-      ),
-    );
+    setState(() {
+      _selected = _items[nextIndex];
+    });
   }
 }

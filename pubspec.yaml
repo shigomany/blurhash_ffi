@@ -9,7 +9,7 @@ funding:
   - https://github.com/sponsors/folksable
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.1.0 <4.0.0'
   flutter: ">=3.3.0"
 
 platforms:
@@ -26,7 +26,7 @@ dependencies:
   logging: ^1.2.0
 
 dev_dependencies:
-  ffigen: ^6.1.2
+  ffigen: ^16.1.0
   meta: ^1.15.0
   flutter_test:
     sdk: flutter
@@ -46,6 +46,7 @@ flutter:
         ffiPlugin: true
       windows:
         ffiPlugin: true
+      web:
 
 screenshots:
   - description: "Blurhash FFI Poster"
