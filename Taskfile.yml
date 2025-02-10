@@ -10,6 +10,7 @@ vars:
   IOS_SIM_TARGET_ARHS: ['x86_64-apple-ios', 'aarch64-apple-ios-sim']
   IOS_TARGET_ARHS: ['aarch64-apple-ios']
   MACOS_TARGET_ARHS: ['aarch64-apple-darwin', 'x86_64-apple-darwin']
+  ANDROID_TARGET_ARHS: ['aarch64-linux-android', 'armv7-linux-androideabi', 'x86_64-linux-android', 'i686-linux-android', 'x86_64-linux-android']
   # Utils
   EXTENSION_LIB: '{{if eq OS "windows"}}dll{{else if eq OS "darwin"}}dylib{{else}}so{{end}}'
 
@@ -23,7 +24,7 @@ tasks:
   generate:ffi:
     desc: Generate the FFI bindings for the native Rust code
     cmds:
-      - flutter pub run ffigen --config ffigen.yaml
+      - dart --enable-experiment=native-assets run ffigen --config ffigen.yaml
 
   generate:all:
     desc: Generate all files
@@ -36,27 +37,12 @@ tasks:
     dir: rust
     cmds:
       - cargo clean
-  # copy-file:
-  #   desc: Coping the file to destination folder
-  #   internal: true
-  #   vars:
-  #     FROM_FOLDER: '{{default "pkg" .FROM_FOLDER}}'
-  #     TO_FOLDER: '{{default "bin" .TO_FOLDER}}'
-  #     FILE: '{{default "blurhash_ffi_bg.wasm" .FILE}}'
-  #     # Constant variables
-  #     FILE_NAME: '{{trimSuffix (printf ".%s" .FILE_EXTENSION) .FILE}}'
-  #     FILE_EXTENSION: '{{last (splitList "." .FILE)}}'
-  #     CMD_COPY: '{{if eq OS "windows"}}copy{{else}}cp{{end}}'
-  #     CMD_RENAME: '{{if eq OS "windows"}}ren{{else}}mv{{end}}'
-  #   cmds:
-  #     - cmd: '{{.CMD_COPY}} {{.FROM_FOLDER}}/{{.FILE}} {{.TO_FOLDER}}/{{.FILE}} &&
-  #             {{.CMD_RENAME}} {{.TO_FOLDER}}/{{.FILE}} {{.TO_FOLDER}}/{{.TARGET_LIB_NAME}}.{{.FILE_EXTENSION}}'
   
   copy-folder:
     desc: Coping the folder to destination folder
     internal: true
     preconditions:
-      - sh: '{{if env "FROM_FOLDER" }} exit 1 {{end}}'
+      - sh: test -n "$FROM_FOLDER"
         msg: 'Variable `FROM_FOLDER` is required'
       - sh: '{{if env "TO_FOLDER" }} exit 1 {{end}}'
         msg: 'Variable `TO_FOLDER` is required'
@@ -110,6 +96,23 @@ tasks:
       - 'lipo -create -output ../ios/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a {{range $arch := .MACOS_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
       - lipo -info ../ios/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a
 
+  build:android:
+    desc: Build for android targets.
+    dir: rust
+    preconditions:
+      - sh: test -n "$ANDROID_HOME"
+        msg: "ANDROID_HOME is not set"
+    cmds:
+      - cargo ndk 
+        -t armeabi-v7a 
+        -t arm64-v8a 
+        -t x86 
+        -t x86_64 
+        -o ../android/src/main/jniLibs build 
+        --release
+      # - for: { var: ANDROID_TARGET_ARHS, as: ARCH }
+      #   cmd: cargo build --lib --release --target {{.ARCH}}
+
   bootstrap:
     desc: Build for all.
     aliases: [bs]
@@ -120,11 +123,8 @@ tasks:
       - task: generate:ffi
       - task: build:ios
       - task: build:macos
-      # - task: copy-folder
-      #   vars:
-      #     FROM_FOLDER: rust/bin/{{.FRAMEWORK_NAME}}.xcframework
-      #     TO_FOLDER: ios/Frameworks/{{.FRAMEWORK_NAME}}.xcframework
-      #     DELETE_FOLDER: true
+      # Android targets
+      - task: build:android
     
         
       # - for: { var: MACOS_TARGET_ARHS, as: ARCH }
@@ -135,18 +135,19 @@ tasks:
       #     FROM_FOLDER: target/release/aarch64-apple-ios
       #     TO_FOLDER: bin/aarch64-apple-ios
       #     FILE: libblurhash_ffi.a
-
-  precheck:rust-targets:
-    desc: Downloading Rust comaptible targets.
-    dir: rust
-    vars:
-      DARWIN_TARGETS: '{{ concat .IOS_TARGET_ARHS .IOS_SIM_TARGET_ARHS .MACOS_TARGET_ARHS }}'
+  
+  precheck:native-doctor:
+    desc: Run native doctor to check for missing dependencies.
     cmds:
-      - for: { var: DARWIN_TARGETS, as: TARGET }
-        cmd: rustup target add {{.TARGET | replace "[" "" | replace "]" ""}}
-        platforms: [darwin]
+      - dart --enable-experiment=native-assets run native_doctor
+  
+  precheck:install-dependencies:
+    desc: Install third party dependencies.
+    cmds:
+      - cargo install cargo-ndk
 
   precheck:all:
     desc: All precheck required dependencies.
     cmds:
-      - task: precheck:rust-targets
+      - task: precheck:native-doctor
+      - task: precheck:install-dependencies

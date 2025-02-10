@@ -24,6 +24,8 @@ dependencies:
   flutter:
     sdk: flutter
   logging: ^1.2.0
+  native_assets_cli: ^0.7.3
+  native_toolchain_rust: ^0.1.0-dev.7
 
 dev_dependencies:
   ffigen: ^16.1.0
@@ -31,6 +33,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  native_doctor:
+    git:
+      url: https://github.com/shigomany/native_toolchain_rust.git
+      path: native_doctor
+      ref: fix/remove-caret-symbol
 
 
 flutter:
