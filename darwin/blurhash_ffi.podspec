@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'blurhash_ffi'
-  s.version          = '0.0.1'
+  s.version          = '0.0.3'
   s.summary          = 'A new Flutter FFI plugin project.'
   s.description      = <<-DESC
 A new Flutter FFI plugin project.
@@ -18,10 +18,25 @@ A new Flutter FFI plugin project.
   # paths, so Classes contains a forwarder C file that relatively imports
   # `../src/*` so that the C sources can be shared among all target platforms.
   s.source           = { :path => '.' }
-  s.source_files     = 'Classes/**/*'
-  s.dependency 'FlutterMacOS'
+  s.source_files = 'Classes/**/*'
+  s.public_header_files = 'Classes**/*.h'
+  s.resource_bundles = {'blurhash_ffi_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
+  s.ios.dependency 'Flutter'
+  s.osx.dependency 'FlutterMacOS'
+  # s.platform = :ios, '11.0'
 
-  s.platform = :osx, '10.11'
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
+  s.ios.deployment_target = '12.0'
+  s.osx.deployment_target = '10.14'
+
+  # Flutter.framework does not contain a i386 slice.
+  s.pod_target_xcconfig = { 
+    'DEFINES_MODULE' => 'YES', 
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
+    'ENABLE_BITCODE' => 'NO',
+  }
   s.swift_version = '5.0'
+  s.static_framework = true
+
+  s.ios.vendored_libraries = 'Libraries/ios/*.a'
+  s.osx.vendored_libraries = 'Libraries/macos/*.a'
 end

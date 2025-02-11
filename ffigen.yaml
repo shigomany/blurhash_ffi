@@ -1,15 +1,15 @@
 # Run with `flutter pub run ffigen --config ffigen.yaml`.
 name: BlurhashFfiBindings
 description: |
-  Bindings for `rust/include/blurhash_ffi.h`.
+  Bindings for `blurhash_ffi.h`.
 
   Regenerate bindings with `flutter pub run ffigen --config ffigen.yaml`.
 output: 'lib/src/blurhash_ffi_bindings_generated.dart'
 headers:
   entry-points:
-    - 'ios/Classes/blurhash_ffi.h'
+    - 'darwin/Classes/blurhash_ffi.h'
   include-directives:
-    - 'ios/Classes/blurhash_ffi.h'
+    - 'darwin/Classes/blurhash_ffi.h'
 preamble: |
   // ignore_for_file: always_specify_types
   // ignore_for_file: camel_case_types

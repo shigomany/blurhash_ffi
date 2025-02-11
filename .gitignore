@@ -32,3 +32,6 @@ build/
 # Rust related
 rust/target/
 rust/pkg/
+
+# FVM Version Cache
+.fvm/

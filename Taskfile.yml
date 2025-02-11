@@ -19,7 +19,7 @@ tasks:
     desc: Generate the bindings for the native Rust code
     dir: rust
     cmds:
-      - cbindgen --config cbindgen.toml --crate blurhash-ffi --output ../ios/Classes/{{.TARGET_LIB_NAME}}.h
+      - cbindgen --config cbindgen.toml --crate blurhash-ffi --output ../darwin/Classes/{{.TARGET_LIB_NAME}}.h
   
   generate:ffi:
     desc: Generate the FFI bindings for the native Rust code
@@ -77,12 +77,12 @@ tasks:
       - for: { var: IOS_ARCHS, as: ARCH }
         cmd: cargo build --lib --release --target {{.ARCH | replace "[" "" | replace "]" ""}}
       - for: { var: IOS_ARCHS, as: ARCH }
-        cmd: rm -rf ../ios/Libraries/lib{{.TARGET_LIB_NAME}}-{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}.a
-      - mkdir -p ../ios/Libraries/ios
+        cmd: rm -rf ../darwin/Libraries/lib{{.TARGET_LIB_NAME}}-{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}.a
+      - mkdir -p ../darwin/Libraries/ios
       - for: { var: IOS_TARGET_ARHS, as: ARCH }
-        cmd: cp target/{{.ARCH}}/release/lib{{.TARGET_LIB_NAME}}.a ../ios/Libraries/ios/lib{{.TARGET_LIB_NAME}}-{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}.a
-      - 'lipo -create -output ../ios/Libraries/ios/lib{{.TARGET_LIB_NAME}}-sim.a {{range $arch := .IOS_SIM_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
-      - lipo -info ../ios/Libraries/ios/lib{{.TARGET_LIB_NAME}}-ios.a 
+        cmd: cp target/{{.ARCH}}/release/lib{{.TARGET_LIB_NAME}}.a ../darwin/Libraries/ios/lib{{.TARGET_LIB_NAME}}-{{ splitList "-" .ARCH | last | replace "[" "" | replace "]" ""}}.a
+      - 'lipo -create -output ../darwin/Libraries/ios/lib{{.TARGET_LIB_NAME}}-sim.a {{range $arch := .IOS_SIM_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
+      - lipo -info ../darwin/Libraries/ios/lib{{.TARGET_LIB_NAME}}-ios.a 
 
   build:macos:
     desc: Build for macOs targets.
@@ -91,10 +91,10 @@ tasks:
     cmds:
       - for: { var: MACOS_TARGET_ARHS, as: ARCH }
         cmd: cargo build --lib --release --target {{.ARCH}}
-      - mkdir -p ../ios/Libraries/macos
-      - rm -rf ../ios/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a
-      - 'lipo -create -output ../ios/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a {{range $arch := .MACOS_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
-      - lipo -info ../ios/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a
+      - mkdir -p ../darwin/Libraries/macos
+      - rm -rf ../darwin/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a
+      - 'lipo -create -output ../darwin/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a {{range $arch := .MACOS_TARGET_ARHS}}target/{{$arch}}/release/lib{{$.TARGET_LIB_NAME}}.a {{end}}'
+      - lipo -info ../darwin/Libraries/macos/lib{{.TARGET_LIB_NAME}}-macos.a
 
   build:android:
     desc: Build for android targets.
@@ -139,7 +139,7 @@ tasks:
   precheck:native-doctor:
     desc: Run native doctor to check for missing dependencies.
     cmds:
-      - dart --enable-experiment=native-assets run native_doctor
+      - dart --enable-experiment=native-assets run native_doctor --yes
   
   precheck:install-dependencies:
     desc: Install third party dependencies.

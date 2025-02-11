@@ -4,4 +4,4 @@ requirements:
     version: 26.0.0
   rust:
     stable:
-      version: 1.84.0
+      version: 1.80.0
