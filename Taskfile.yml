@@ -11,6 +11,7 @@ vars:
   IOS_TARGET_ARHS: ['aarch64-apple-ios']
   MACOS_TARGET_ARHS: ['aarch64-apple-darwin', 'x86_64-apple-darwin']
   ANDROID_TARGET_ARHS: ['aarch64-linux-android', 'armv7-linux-androideabi', 'x86_64-linux-android', 'i686-linux-android', 'x86_64-linux-android']
+  WINDOWS_TARGET_ARHS: ['x86_64-pc-windows-msvc', 'aarch64-pc-windows-msvc']
   # Utils
   EXTENSION_LIB: '{{if eq OS "windows"}}dll{{else if eq OS "darwin"}}dylib{{else}}so{{end}}'
 
@@ -110,13 +111,23 @@ tasks:
         -t x86_64 
         -o ../android/src/main/jniLibs build 
         --release
-      # - for: { var: ANDROID_TARGET_ARHS, as: ARCH }
-      #   cmd: cargo build --lib --release --target {{.ARCH}}
+
+  build:windows:
+    desc: Build for windows targets.
+    dir: rust
+    platforms: [windows]
+    cmds:
+      - for: { var: WINDOWS_TARGET_ARHS, as: ARCH }
+        cmd: cargo build --release --lib --target {{.ARCH}}
+      - xcopy "target\x86_64-pc-windows-msvc\release\blurhash_ffi.dll" "..\windows\lib" /Y
+      
 
   bootstrap:
     desc: Build for all.
     aliases: [bs]
     cmds:
+      # Flutter deps
+      - task: flutter:pub:get
       # Darwin targets
       - task: precheck:all
       - task: generate:bindings
@@ -125,7 +136,13 @@ tasks:
       - task: build:macos
       # Android targets
       - task: build:android
-    
+      # Windows targets
+      - task: build:windows
+  
+  flutter:pub:get:
+    desc: Run flutter pub get.
+    cmds: 
+     - flutter pub get
         
       # - for: { var: MACOS_TARGET_ARHS, as: ARCH }
       #   cmd: cargo build --release --lib --target {{.ARCH}}
@@ -135,7 +152,7 @@ tasks:
       #     FROM_FOLDER: target/release/aarch64-apple-ios
       #     TO_FOLDER: bin/aarch64-apple-ios
       #     FILE: libblurhash_ffi.a
-  
+
   precheck:native-doctor:
     desc: Run native doctor to check for missing dependencies.
     cmds:
@@ -145,6 +162,7 @@ tasks:
     desc: Install third party dependencies.
     cmds:
       - cargo install cargo-ndk
+      - cargo install cbindgen
 
   precheck:all:
     desc: All precheck required dependencies.
