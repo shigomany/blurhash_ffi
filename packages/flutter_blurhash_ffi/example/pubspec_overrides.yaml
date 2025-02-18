@@ -1,0 +1,6 @@
+# melos_managed_dependency_overrides: dart_blurhash_ffi,flutter_blurhash_ffi
+dependency_overrides:
+  dart_blurhash_ffi:
+    path: ../../dart_blurhash_ffi
+  flutter_blurhash_ffi:
+    path: ..

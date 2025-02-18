@@ -1,0 +1,6 @@
+name: blurhash_ffi
+
+packages:
+  - packages/dart_blurhash_ffi
+  - packages/flutter_blurhash_ffi
+  - packages/flutter_blurhash_ffi/example

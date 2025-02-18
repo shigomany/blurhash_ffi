@@ -7,9 +7,6 @@ class ImageBundle {
   /// The width of the image in pixels.
   final int width;
 
-  /// The number of bytes in a single row of the image.
-  final int rowStride;
-
   /// The RGB bytes of the image.
   final Uint8List rgbBytes;
 
@@ -26,17 +23,14 @@ class ImageBundle {
   const ImageBundle({
     required this.height,
     required this.width,
-    required this.rowStride,
     required this.rgbBytes,
     required this.componentX,
     required this.componentY,
   });
 
-  int get numChannels => rowStride ~/ width;
-
   @override
   String toString() {
-    return 'ImageBundle(height: $height, width: $width, rowStride: $rowStride, rgbBytes: $rgbBytes, componentX: $componentX, componentY: $componentY)';
+    return 'ImageBundle(height: $height, width: $width, rgbBytes: $rgbBytes, componentX: $componentX, componentY: $componentY)';
   }
 
   ImageBundle copyWith({
@@ -50,7 +44,6 @@ class ImageBundle {
     return ImageBundle(
       height: height ?? this.height,
       width: width ?? this.width,
-      rowStride: rowStride ?? this.rowStride,
       rgbBytes: rgbBytes ?? this.rgbBytes,
       componentX: componentX ?? this.componentX,
       componentY: componentY ?? this.componentY,
@@ -63,7 +56,6 @@ class ImageBundle {
 
     return other.height == height &&
         other.width == width &&
-        other.rowStride == rowStride &&
         other.rgbBytes == rgbBytes &&
         other.componentX == componentX &&
         other.componentY == componentY;
@@ -73,7 +65,6 @@ class ImageBundle {
   int get hashCode {
     return height.hashCode ^
         width.hashCode ^
-        rowStride.hashCode ^
         rgbBytes.hashCode ^
         componentX.hashCode ^
         componentY.hashCode;

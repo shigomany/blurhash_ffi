@@ -158,7 +158,6 @@ class BlurhashFfiImage extends ImageProvider<BlurhashFfiImage> {
             ImageBundle(
               height: imageInfo.image.height,
               width: imageInfo.image.width,
-              rowStride: imageInfo.image.width * 4,
               rgbBytes: list,
               componentX: componentX,
               componentY: componentY,
