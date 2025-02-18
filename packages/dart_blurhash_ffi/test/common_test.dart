@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_blurhash_ffi/dart_blurhash_ffi.dart';
-import 'package:image/image.dart';
 import 'package:test/test.dart';
 
 void main() {
