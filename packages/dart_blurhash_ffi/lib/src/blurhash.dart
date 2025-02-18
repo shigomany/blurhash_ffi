@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:dart_blurhash_ffi/src/ffi_rust.dart';
 import 'package:ffi/ffi.dart';
 
+import 'utils/exceptions.dart';
+
 class BlurhashFFI {
   const BlurhashFFI._();
 
@@ -39,25 +41,36 @@ class BlurhashFFI {
   /// ```
   static String encode(
     Uint8List data, {
-    required int width,
-    required int height,
     int componentX = 4,
     int componentY = 3,
   }) {
-    final bytes = blurhashEncode(
+    final arena = Arena();
+    final pointer = arena.allocate<Uint8>(data.length);
+
+    for (int i = 0; i < data.length; i++) {
+      pointer[i] = data[i];
+    }
+
+    final wrappedResult = blurhashEncode(
       componentX,
       componentY,
-      width,
-      height,
-      data,
+      pointer,
       data.length,
     );
 
-    final result = bytes.cast<Utf8>().toDartString();
+    arena.free(pointer);
 
-    malloc.free(bytes);
+    if (!wrappedResult.success) {
+      final exceptionMessage = wrappedResult.error.cast<Utf8>().toDartString();
+      freeString(wrappedResult.error);
 
-    return result;
+      throw BlurhashFfiException(message: exceptionMessage);
+    }
+
+    final blurhashStr = wrappedResult.data.cast<Utf8>().toDartString();
+    freeString(wrappedResult.data);
+
+    return blurhashStr;
   }
 
   /// Decodes a BlurHash string into raw RGBA pixel data.
@@ -75,13 +88,24 @@ class BlurhashFFI {
     int punch = 1,
   }) {
     final ptr = blurhash.toNativeUtf8().cast<Uint8>();
-    final bytes = blurhashDecode(
+    final wrappedResult = blurhashDecode(
       ptr,
       blurhash.length,
       width,
       height,
       punch.toDouble(),
     );
+
+    if (!wrappedResult.success) {
+      final exceptionMessage = wrappedResult.error.cast<Utf8>().toDartString();
+      freeString(wrappedResult.error);
+
+      throw BlurhashFfiException(message: exceptionMessage);
+    }
+
+    final rawBytes = wrappedResult.data.cast<Uint8>();
+    // Decode result is always 4 bytes per pixel (RGBA)
+    final bytes = rawBytes.asTypedList(width * height * 4);
 
     return bytes;
   }

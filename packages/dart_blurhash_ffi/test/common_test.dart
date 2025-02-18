@@ -6,30 +6,69 @@ import 'package:image/image.dart';
 import 'package:test/test.dart';
 
 void main() {
-  late final Uint8List fileBytes;
-  late final Image image;
-
-  setUp(() {
-    fileBytes = File('assets/test1.jpg').readAsBytesSync();
-    final decodedImage = decodeImage(fileBytes);
-
-    if (decodedImage == null) {
-      throw Exception('Failed to decode image');
-    }
-
-    image = decodedImage.convert(format: Format.uint8, numChannels: 4);
+  late final Uint8List clearedImageBytes;
+  late final Uint8List blurhashImageBytes;
+  setUpAll(() {
+    clearedImageBytes = File('assets/test1.webp').readAsBytesSync();
+    blurhashImageBytes = File('assets/encoded_test1.png').readAsBytesSync();
   });
 
   group('Encode', () {
-    test('Common call', () {
-      final bytes = image.buffer.asUint8List();
-      final encoded = BlurhashFFI.encode(
-        bytes,
-        width: image.width,
-        height: image.height,
+    test('Valid encoding', () {
+      final encoded = BlurhashFFI.encode(clearedImageBytes);
+      expect('LGFO~6Yk^6#M@-5c,1Ex@@or[j6o', encoded);
+    });
+
+    test('Invalid encoding', () {
+      encodeCall() => BlurhashFFI.encode(Uint8List.fromList([1, 2, 3, 4]));
+
+      expect(encodeCall, throwsA(isA<BlurhashFfiException>()));
+    });
+
+    test('Valid decoding', () {
+      final decoded = BlurhashFFI.decode(
+        'LGFO~6Yk^6#M@-5c,1Ex@@or[j6o',
+        width: 256,
+        height: 256,
       );
 
-      expect('LGF5]+Yk^6#M@-5c,1J5@[or[Q6.', encoded);
+      final decodedImage = Image.fromBytes(
+        width: 256,
+        height: 256,
+        bytes: decoded.buffer,
+        numChannels: 4,
+        format: Format.uint8,
+      );
+      final pngEncoder = PngEncoder();
+      final pngBytes = pngEncoder.encode(decodedImage);
+
+      expect(pngBytes, blurhashImageBytes);
+    });
+
+    test('Invalid decoding', () {
+      decodeCall() => BlurhashFFI.decode(
+            'invalid_blurhash',
+            width: 64,
+            height: 64,
+          );
+
+      expect(decodeCall, throwsA(isA<BlurhashFfiException>()));
+    });
+
+    test('Validity check', () {
+      final isValid = BlurhashFFI.isValidBlurHash(
+        'LGFO~6Yk^6#M@-5c,1Ex@@or[j6o',
+      );
+
+      expect(isValid, isTrue);
+    });
+
+    test('Check invalid Blurhash', () {
+      final isValid = BlurhashFFI.isValidBlurHash(
+        'invalud_blurhash',
+      );
+
+      expect(isValid, isFalse);
     });
   });
 }

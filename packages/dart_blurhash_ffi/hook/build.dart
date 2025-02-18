@@ -15,7 +15,7 @@ Future<void> main(List<String> args) async {
       args,
       (BuildConfig buildConfig, BuildOutput output) async {
         final builder = RustBuilder(
-          package: 'blurhash_ffi',
+          package: 'dart_blurhash_ffi',
           cratePath: 'rust',
           buildConfig: buildConfig,
           logger: logger,
