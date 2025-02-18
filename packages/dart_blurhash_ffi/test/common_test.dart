@@ -10,10 +10,10 @@ void main() {
   late final Uint8List blurhashImageBytes;
   setUpAll(() {
     clearedImageBytes = File('assets/test1.webp').readAsBytesSync();
-    blurhashImageBytes = File('assets/encoded_test1.png').readAsBytesSync();
+    blurhashImageBytes = File('assets/encoded_test1.bin').readAsBytesSync();
   });
 
-  group('Encode', () {
+  group('Common', () {
     test('Valid encoding', () {
       final encoded = BlurhashFFI.encode(clearedImageBytes);
       expect('LGFO~6Yk^6#M@-5c,1Ex@@or[j6o', encoded);
@@ -28,21 +28,14 @@ void main() {
     test('Valid decoding', () {
       final decoded = BlurhashFFI.decode(
         'LGFO~6Yk^6#M@-5c,1Ex@@or[j6o',
-        width: 256,
-        height: 256,
+        width: 32,
+        height: 32,
       );
 
-      final decodedImage = Image.fromBytes(
-        width: 256,
-        height: 256,
-        bytes: decoded.buffer,
-        numChannels: 4,
-        format: Format.uint8,
-      );
-      final pngEncoder = PngEncoder();
-      final pngBytes = pngEncoder.encode(decodedImage);
+      // Store
+      // File('assets/encoded_test1.bin').writeAsBytesSync(decoded);
 
-      expect(pngBytes, blurhashImageBytes);
+      expect(decoded, blurhashImageBytes);
     });
 
     test('Invalid decoding', () {
