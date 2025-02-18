@@ -28,14 +28,10 @@ class OctoImageVariant extends StatelessWidget {
             width: 250,
             height: 150,
             fit: BoxFit.fill,
-            fadeInDuration: const Duration(milliseconds: 500),
+            fadeInDuration: const Duration(milliseconds: 1500),
             progressIndicatorBuilder:
                 (context, chunks) => Image(
-                  image: BlurhashFfiImage(
-                    selected.blurhash,
-                    decodingWidth: 25,
-                    decodingHeight: 15,
-                  ),
+                  image: BlurhashFfiImage(selected.blurhash),
                   width: 250,
                   height: 150,
                   fit: BoxFit.fill,

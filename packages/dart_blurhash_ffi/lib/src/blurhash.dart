@@ -20,23 +20,19 @@ class BlurhashFFI {
   /// The [data] parameter __should contain RGBA8 pixel data__ in bytes (each pixel
   /// represented as 4 consecutive bytes: red, green, blue, alpha).
   ///
-  /// The [width] and [height] must specify the image dimensions in pixels.
-  ///
   /// [componentX] and [componentY] define the number of DCT components to use
   /// in X and Y dimensions respectively (typically between 1-9, default 4x3).
   /// Higher values create more detailed but longer hashes.
   ///
   /// The `rowStride` is automatically calculated as `width * 4` bytes, assuming
   /// 4 bytes per pixel (RGBA format).
-  ///F
+  ///
   /// Example:
   /// ```dart
   /// final hash = BlurHash.encode(
   ///   imagePixels,
   ///   width: 128,
   ///   height: 128,
-  ///   componentX: 5,
-  ///   componentY: 4,
   /// );
   /// ```
   static String encode(

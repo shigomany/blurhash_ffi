@@ -9,4 +9,7 @@ class BlurhashFfiException implements Exception {
 
   /// Excpetion message.
   final String message;
+
+  @override
+  String toString() => 'BlurhashFfiException(message: $message)';
 }

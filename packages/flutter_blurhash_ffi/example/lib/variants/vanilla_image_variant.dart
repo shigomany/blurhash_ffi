@@ -29,7 +29,7 @@ class VanillaImageVariant extends StatelessWidget {
             height: 150,
             frameBuilder: (context, child, frame, wasLoaded) {
               return AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 1500),
                 transitionBuilder:
                     (child, animation) =>
                         FadeTransition(opacity: animation, child: child),
@@ -41,11 +41,7 @@ class VanillaImageVariant extends StatelessWidget {
                         )
                         : Image(
                           key: const ValueKey('vanilla-loading-key'),
-                          image: BlurhashFfiImage(
-                            selected.blurhash,
-                            decodingWidth: 25,
-                            decodingHeight: 15,
-                          ),
+                          image: BlurhashFfiImage(selected.blurhash),
                           fit: BoxFit.fill,
                           width: 250,
                           height: 150,

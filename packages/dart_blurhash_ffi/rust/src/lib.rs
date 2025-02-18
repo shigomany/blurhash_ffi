@@ -1,4 +1,4 @@
-use blurhash::{decode_image, encode as internal_encode};
+use blurhash::{decode_image, encode_image};
 use image::{GenericImageView, ImageReader};
 use std::ffi::*;
 use std::io::Cursor;
@@ -49,15 +49,8 @@ pub extern "C" fn blurhash_encode(
             };
         }
     };
-    let (width, height) = img.dimensions();
-    let encoded = internal_encode(
-        components_x,
-        components_y,
-        width,
-        height,
-        &img.to_rgba8().into_vec(),
-    )
-    .unwrap();
+    // let (width, height) = img.dimensions();
+    let encoded = encode_image(components_x, components_y, &img.to_rgba8()).unwrap();
     let c_string = CString::new(encoded).unwrap();
 
     WrappedEncodeResult {

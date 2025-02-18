@@ -31,11 +31,7 @@ class CachedNetworkImageVariant extends StatelessWidget {
             fadeInDuration: const Duration(milliseconds: 500),
             progressIndicatorBuilder:
                 (context, url, downloadProgress) => Image(
-                  image: BlurhashFfiImage(
-                    selected.blurhash,
-                    decodingWidth: 25,
-                    decodingHeight: 15,
-                  ),
+                  image: BlurhashFfiImage(selected.blurhash),
                   width: 250,
                   height: 150,
                   fit: BoxFit.fill,

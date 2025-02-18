@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'utils/url_images_list.dart';
 import 'variants/vanilla_image_variant.dart';
 import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as img;
 
 typedef ItemImageBlurhashType = ({String url, String blurhash});
 
@@ -37,14 +38,11 @@ class _MyAppState extends State<MyApp> {
   Future<void> _loadingAllImages() async {
     for (final url in urlImagesList) {
       final response = await http.get(Uri.parse(url));
-      // final decodedImage = image.decodeImage(response.bodyBytes);
-      // if (decodedImage == null) {
-      //   throw const FormatException('Error with decoding image');
-      // }
-
-      // final rgbaImage = decodedImage.convert(numChannels: 4);
-
-      final blurhash = BlurhashFFI.encode(response.bodyBytes);
+      final image = img.decodeImage(response.bodyBytes);
+      if (image == null) {
+        continue;
+      }
+      final blurhash = BlurhashFFI.encode(img.encodePng(image));
       _items.add((url: url, blurhash: blurhash));
     }
   }

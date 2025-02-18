@@ -8,11 +8,17 @@ class UiImageFactory {
     required this.data,
     required this.width,
     required this.height,
+    this.targetWidth,
+    this.targetHeight,
+    this.format = ui.PixelFormat.rgba8888,
   });
 
   final Uint8List data;
   final int width;
   final int height;
+  final int? targetWidth;
+  final int? targetHeight;
+  final ui.PixelFormat format;
 
   Future<ui.Image> convert() {
     final completer = Completer<ui.Image>();
@@ -21,8 +27,10 @@ class UiImageFactory {
       data,
       width,
       height,
-      ui.PixelFormat.rgba8888,
+      format,
       completer.complete,
+      targetWidth: targetWidth,
+      targetHeight: targetHeight,
     );
 
     return completer.future;
