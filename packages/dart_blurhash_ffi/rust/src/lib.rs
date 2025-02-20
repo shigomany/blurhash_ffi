@@ -49,7 +49,7 @@ pub extern "C" fn blurhash_encode(
             };
         }
     };
-    // let (width, height) = img.dimensions();
+
     let encoded = encode_image(components_x, components_y, &img.to_rgba8()).unwrap();
     let c_string = CString::new(encoded).unwrap();
 
@@ -83,23 +83,29 @@ pub extern "C" fn blurhash_decode(
     };
 
     let decoded_result = decode_image(blurhash_str, width, height, punch);
-    let mut decoded = match decoded_result {
-        Ok(value) => value,
+    match decoded_result {
+        Ok(pixels) => {
+            // Create copy of pixel data
+            let mut vec = pixels.into_vec();
+            // Getting pointer to data
+            let ptr = vec.as_mut_ptr();
+            // Warning: do not free memory, as the pointer will be used in Flutter
+            std::mem::forget(vec);
+
+            WrappedDecodeResult {
+                success: true,
+                data: ptr,
+                error_message: std::ptr::null_mut(),
+            }
+        }
         Err(e) => {
-            let c_string =
-                CString::new(format!("Failed encode blurhash to image: {:?}", e)).unwrap();
-            return WrappedDecodeResult {
+            let c_string = CString::new(format!("Failed to decode blurhash: {:?}", e)).unwrap();
+            WrappedDecodeResult {
                 success: false,
                 data: std::ptr::null_mut(),
                 error_message: c_string.into_raw(),
-            };
+            }
         }
-    };
-
-    WrappedDecodeResult {
-        success: true,
-        data: decoded.as_mut_ptr(),
-        error_message: std::ptr::null_mut(),
     }
 }
 

@@ -24,18 +24,18 @@ void main() {
       expect(encodeCall, throwsA(isA<BlurhashFfiException>()));
     });
 
-    // test('Valid decoding', () {
-    //   final decoded = BlurhashFFI.decode(
-    //     'LGFO~6Yk^6#M@-5c,1Ex@@or[j6o',
-    //     width: 32,
-    //     height: 32,
-    //   );
+    test('Valid decoding', () {
+      final decoded = BlurhashFFI.decode(
+        'LGFO~6Yk^6#M@-5c,1Ex@@or[j6o',
+        width: 32,
+        height: 32,
+      );
 
-    //   // Store
-    //   // File('assets/encoded_test1.bin').writeAsBytesSync(decoded);
+      // Store
+      // File('assets/encoded_test1.bin').writeAsBytesSync(decoded);
 
-    //   expect(decoded, blurhashImageBytes);
-    // });
+      expect(decoded, blurhashImageBytes);
+    });
 
     test('Invalid decoding', () {
       decodeCall() => BlurhashFFI.decode(
