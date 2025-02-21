@@ -1,5 +1,5 @@
 use blurhash::{decode_image, encode_image};
-use image::{GenericImageView, ImageReader};
+use image::ImageReader;
 use std::ffi::*;
 use std::io::Cursor;
 #[cfg(target_arch = "wasm32")]
