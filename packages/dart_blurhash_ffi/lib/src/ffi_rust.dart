@@ -25,10 +25,10 @@ final class WrappedDecodeResult extends ffi.Struct {
 
 @ffi.Native<
     WrappedEncodeResult Function(
-      ffi.Int32,
-      ffi.Int32,
+      ffi.Uint32,
+      ffi.Uint32,
       ffi.Pointer<ffi.Uint8>,
-      ffi.Int32,
+      ffi.Uint32,
     )>(symbol: 'blurhash_encode')
 external WrappedEncodeResult blurhashEncode(
   int componentsX,
@@ -40,9 +40,9 @@ external WrappedEncodeResult blurhashEncode(
 @ffi.Native<
     WrappedDecodeResult Function(
       ffi.Pointer<ffi.Uint8>,
-      ffi.Int32,
-      ffi.Int32,
-      ffi.Int32,
+      ffi.Uint32,
+      ffi.Uint32,
+      ffi.Uint32,
       ffi.Float,
     )>(symbol: 'blurhash_decode')
 external WrappedDecodeResult blurhashDecode(
@@ -56,7 +56,7 @@ external WrappedDecodeResult blurhashDecode(
 @ffi.Native<
     ffi.Bool Function(
       ffi.Pointer<ffi.Uint8>,
-      ffi.Int32,
+      ffi.Uint32,
     )>(symbol: 'is_valid_blurhash')
 external bool isValidBlurhash(
   ffi.Pointer<ffi.Uint8> blurhash,
@@ -74,7 +74,9 @@ external bool freeString(
 @ffi.Native<
     ffi.Bool Function(
       ffi.Pointer<ffi.Uint8>,
+      ffi.Uint32,
     )>(symbol: 'free_bytes')
 external bool freeBytes(
   ffi.Pointer<ffi.Uint8> bytes,
+  int length,
 );

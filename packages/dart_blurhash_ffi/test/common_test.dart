@@ -12,7 +12,7 @@ void main() {
     blurhashImageBytes = File('assets/encoded_test1.bin').readAsBytesSync();
   });
 
-  group('Common', () {
+  group('Common. ', () {
     test('Valid encoding', () {
       final encoded = BlurhashFFI.encode(clearedImageBytes);
       expect('LGFO~6Yk^6#M@-5c,1Ex@@or[j6o', encoded);

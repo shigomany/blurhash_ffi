@@ -3,7 +3,7 @@ import 'package:blurhash_ffi_example/variants/octo_image_variant.dart';
 import 'package:dart_blurhash_ffi/dart_blurhash_ffi.dart';
 import 'package:flutter/material.dart';
 
-import 'utils/url_images_list.dart';
+import 'utils/images_list.dart';
 import 'variants/vanilla_image_variant.dart';
 import 'package:http/http.dart' as http;
 

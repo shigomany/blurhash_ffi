@@ -30,12 +30,13 @@ pub extern "C" fn blurhash_encode(
     components_x: u32,
     components_y: u32,
     rgba_image: *const u8,
-    rgba_image_len: usize,
+    rgba_image_len: u32,
 ) -> WrappedEncodeResult {
-    let bytes_slice = unsafe { std::slice::from_raw_parts(rgba_image, rgba_image_len) };
+    let bytes_slice = unsafe { std::slice::from_raw_parts(rgba_image, rgba_image_len as usize) };
     let reader = ImageReader::new(Cursor::new(bytes_slice))
         .with_guessed_format()
         .unwrap();
+
 
     let img = match reader.decode() {
         Ok(img) => img,
@@ -64,12 +65,12 @@ pub extern "C" fn blurhash_encode(
 #[no_mangle]
 pub extern "C" fn blurhash_decode(
     blurhash: *const u8,
-    blurhash_len: usize,
+    blurhash_len: u32,
     width: u32,
     height: u32,
     punch: f32,
 ) -> WrappedDecodeResult {
-    let blurhash_slice = unsafe { std::slice::from_raw_parts(blurhash, blurhash_len) };
+    let blurhash_slice = unsafe { std::slice::from_raw_parts(blurhash, blurhash_len as usize) };
     let blurhash_str = match std::str::from_utf8(blurhash_slice) {
         Ok(value) => value,
         Err(e) => {
@@ -111,8 +112,8 @@ pub extern "C" fn blurhash_decode(
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[no_mangle]
-pub extern "C" fn is_valid_blurhash(blurhash: *const u8, blurhash_len: usize) -> bool {
-    let blurhash_slice = unsafe { std::slice::from_raw_parts(blurhash, blurhash_len) };
+pub extern "C" fn is_valid_blurhash(blurhash: *const u8, blurhash_len: u32) -> bool {
+    let blurhash_slice = unsafe { std::slice::from_raw_parts(blurhash, blurhash_len as usize) };
     let blurhash_str = std::str::from_utf8(blurhash_slice).unwrap();
 
     // Length checking
@@ -137,7 +138,7 @@ pub extern "C" fn is_valid_blurhash(blurhash: *const u8, blurhash_len: usize) ->
     // expected hash size
     let expected_length = 4 + 2 * num_x * num_y;
 
-    blurhash_len == expected_length
+    blurhash_len == expected_length as u32
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
@@ -152,10 +153,10 @@ pub extern "C" fn free_string(ptr: *mut c_char) {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[no_mangle]
-pub extern "C" fn free_bytes(ptr: *mut u8, len: usize) {
+pub extern "C" fn free_bytes(ptr: *mut u8, len: u32) {
     unsafe {
         if !ptr.is_null() {
-            let _ = Vec::from_raw_parts(ptr, len, len);
+            let _ = Vec::from_raw_parts(ptr, len as usize, len as usize);
         }
     }
 }
