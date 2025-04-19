@@ -1,4 +1,10 @@
 name: blurhash_ffi
+
+repository: https://github.com/folksable/blurhash_ffi
+issue_tracker: https://github.com/folksable/blurhash_ffi/issues
+funding: 
+  - https://github.com/sponsors/folksable
+
 environment:
   sdk: ">=3.8.0-91.0.dev <4.0.0"
 dev_dependencies:
