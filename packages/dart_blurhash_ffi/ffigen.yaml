@@ -12,9 +12,6 @@ compiler-opts:
   - "-Wno-availability"
 output:
   bindings: "lib/src/bindings.g.dart"
-# comments:
-#   style: any
-#   length: full
 exclude-all-by-default: true
 structs:
   include:
@@ -22,7 +19,3 @@ structs:
 functions:
   include:
     - "blurhash_.*"
-  # leaf:
-  #   # All C APIs are leaf functions (e.g. they do not call into Dart)
-  #   include:
-  #     - ".*"
