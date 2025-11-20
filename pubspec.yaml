@@ -8,6 +8,6 @@ funding:
 environment:
   sdk: ^3.10.0
 
-workspace:
-  - packages/dart_blurhash_ffi
-  - packages/flutter_blurhash_ffi
+# workspace:
+#   - packages/dart_blurhash_ffi
+#   - packages/flutter_blurhash_ffi
