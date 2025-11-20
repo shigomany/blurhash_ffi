@@ -1,6 +1,6 @@
 import 'dart:ffi';
 import 'dart:typed_data';
-import 'package:dart_blurhash_ffi/src/ffi_rust.dart';
+import 'package:dart_blurhash_ffi/src/bindings.g.dart';
 import 'package:ffi/ffi.dart';
 
 import 'utils/exceptions.dart';
@@ -12,7 +12,7 @@ class BlurhashFFI {
   static bool isValidBlurHash(String blurhash) {
     final blurhashBytes = blurhash.toNativeUtf8().cast<Uint8>();
 
-    return isValidBlurhash(blurhashBytes, blurhash.length);
+    return blurhash_is_valid(blurhashBytes, blurhash.length);
   }
 
   /// Encodes an image into a BlurHash string.
@@ -47,7 +47,7 @@ class BlurhashFFI {
       pointer[i] = data[i];
     }
 
-    final wrappedResult = blurhashEncode(
+    final wrappedResult = blurhash_encode(
       componentX,
       componentY,
       pointer,
@@ -57,14 +57,16 @@ class BlurhashFFI {
     arena.free(pointer);
 
     if (!wrappedResult.success) {
-      final exceptionMessage = wrappedResult.error.cast<Utf8>().toDartString();
-      freeString(wrappedResult.error);
+      final exceptionMessage = wrappedResult.error_message
+          .cast<Utf8>()
+          .toDartString();
+      blurhash_free_string(wrappedResult.error_message);
 
       throw BlurhashFfiException(message: exceptionMessage);
     }
 
     final blurhashStr = wrappedResult.data.cast<Utf8>().toDartString();
-    freeString(wrappedResult.data);
+    blurhash_free_string(wrappedResult.data);
 
     return blurhashStr;
   }
@@ -84,7 +86,7 @@ class BlurhashFFI {
     int punch = 1,
   }) {
     final ptr = blurhash.toNativeUtf8().cast<Uint8>();
-    final wrappedResult = blurhashDecode(
+    final wrappedResult = blurhash_decode(
       ptr,
       blurhash.length,
       width,
@@ -93,8 +95,10 @@ class BlurhashFFI {
     );
 
     if (!wrappedResult.success) {
-      final exceptionMessage = wrappedResult.error.cast<Utf8>().toDartString();
-      freeString(wrappedResult.error);
+      final exceptionMessage = wrappedResult.error_message
+          .cast<Utf8>()
+          .toDartString();
+      blurhash_free_string(wrappedResult.error_message);
 
       throw BlurhashFfiException(message: exceptionMessage);
     }

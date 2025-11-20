@@ -29,10 +29,24 @@ dart pub add blurhash_ffi
 
 # Usage
 
-TODO
+
+
+# Develop
+
+1. Run pub get:
+
+```sh
+dart pub get
+```
+
+2. Generate FFI bindings:
+
+```sh
+dart run ffigen --config ffigen.yaml
+```
 
 # Testing
 
 ```sh
-dart --enable-experiment=native-assets test
+dart test
 ```

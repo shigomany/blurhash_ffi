@@ -6,6 +6,8 @@ funding:
   - https://github.com/sponsors/folksable
 
 environment:
-  sdk: ">=3.8.0-91.0.dev <4.0.0"
-dev_dependencies:
-  melos: ^6.3.2
+  sdk: ^3.10.0
+
+# workspace:
+#   - packages/dart_blurhash_ffi
+#   - packages/flutter_blurhash_ffi

@@ -112,7 +112,7 @@ pub extern "C" fn blurhash_decode(
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[no_mangle]
-pub extern "C" fn is_valid_blurhash(blurhash: *const u8, blurhash_len: u32) -> bool {
+pub extern "C" fn blurhash_is_valid(blurhash: *const u8, blurhash_len: u32) -> bool {
     let blurhash_slice = unsafe { std::slice::from_raw_parts(blurhash, blurhash_len as usize) };
     let blurhash_str = std::str::from_utf8(blurhash_slice).unwrap();
 
@@ -143,7 +143,7 @@ pub extern "C" fn is_valid_blurhash(blurhash: *const u8, blurhash_len: u32) -> b
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[no_mangle]
-pub extern "C" fn free_string(ptr: *mut c_char) {
+pub extern "C" fn blurhash_free_string(ptr: *mut c_char) {
     unsafe {
         if !ptr.is_null() {
             let _ = CString::from_raw(ptr);
@@ -153,7 +153,7 @@ pub extern "C" fn free_string(ptr: *mut c_char) {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[no_mangle]
-pub extern "C" fn free_bytes(ptr: *mut u8, len: u32) {
+pub extern "C" fn blurhash_free_bytes(ptr: *mut u8, len: u32) {
     unsafe {
         if !ptr.is_null() {
             let _ = Vec::from_raw_parts(ptr, len as usize, len as usize);
